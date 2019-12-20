@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+    
+  <meta name="description" content="java博客，并发，个人博客" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+    表达式求值 |  qssq的博客
+  </title>
+  
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+  
+<script src="/js/pace.min.js"></script>
+
+
+  
+
+  
+
+<meta name="generator" content="Hexo 4.1.1"><link rel="alternate" href="/atom.xml" title="qssq的博客" type="application/atom+xml">
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    <main class="content">
+      <section class="outer">
+  <article id="post-表达式求值" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  表达式求值
+</h1>
+  
+
+    </header>
+    
+
+    
+    <div class="article-meta">
+      <a href="/2019/12/20/%E8%A1%A8%E8%BE%BE%E5%BC%8F%E6%B1%82%E5%80%BC/" class="article-date">
+  <time datetime="2019-12-20T12:27:59.000Z" itemprop="datePublished">2019-12-20</time>
+</a>
+      
+    </div>
+    
+
+    
+    
+    <div class="tocbot"></div>
+
+
+
+
+
+    
+
+    <div class="article-entry" itemprop="articleBody">
+      
+
+
+      
+
+      
+      <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>表达式求值是栈这种数据结构的一个很经典的应用，恰逢是数据结构期末实践题目，经过一定的努力终于也是实现了这个算法，所以分享下我的思路和经验，希望正准备尝试解决这个问题的同学可以少走些弯路，有所借鉴和收获。</p>
+<p><strong>个人水平有限，文笔拙劣，有所意见和建议欢迎指出</strong></p>
+<a id="more"></a>
+
+<p>我们日常使用的四则运算式如 1+1 被称为中缀表达式，即所有的运算符号都在运算数的中间出现，我们在初学编程时都练习过简单的二元运算，但当求值问题扩大到一个完整的四则运算式的时候，就需要考虑<strong>运算符优先级、括号</strong>等多个问题，解决了这些问题也就实现了表达式求值。</p>
+<p>表达式求值问题常用的也是最广泛的解决方法是逆波兰式转换法，主要步骤可简单分为两步，用户输入的中缀表达式转化为后缀表达式（逆波兰式），再对逆波兰式进行运算。但在编程过程中我发现简单的分为两步是行不通的，因为涉及到多位数和浮点数，由于输入时统一存储为字符串，在进行中缀到后缀的转换后无法得到正确的后缀式字符串，由于c语言中char型数据实际上也是int型数据，这就进一步增加了正确转换的难度，从而也就无法在逆波兰式的计算中得出正确的结果，所以在编程实现时将这两步合为一个函数实现，<strong>即以字符串形式存储键盘输入的表达式后，对该字符串逐位处理，通过ASCII码值的判断分为数字或小数点、运算符两种情况，然后按照判断结果执行相应的语句。</strong></p>
+<h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><p>创建<strong>一char型数组</strong>用于存储输入的中缀表达式，在中缀表达式向后缀表达式的转化以及后缀表达式的计算中（<strong>详情见各种数据结构教材或书籍，或相关博客，实现此算法必须要实现了解这些过程</strong>）我们知道，因为涉及到运算符优先级的判断和后缀表达式的计算的部分我们需要借助栈来实现，所以需要创建<strong>一double型栈和一char型栈</strong>，分别用于存储操作数和运算符，栈的存储可随意选用线性结构或链式结构，需要实现以下操作函数：</p>
+<ul>
+<li>初始化</li>
+<li>出栈</li>
+<li>入栈</li>
+<li>取栈顶</li>
+<li>判空</li>
+</ul>
+<p>接下来对如何处理输入的表达式做详细介绍</p>
+<h3 id="1-数字或小数点（非运算符）"><a href="#1-数字或小数点（非运算符）" class="headerlink" title="1.数字或小数点（非运算符）"></a>1.数字或小数点（非运算符）</h3><p><img src="/images/ascii.png" alt="ascii">)<img src="data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==" alt="点击并拖拽以移动"></p>
+<p>上图为ASCII码对照表</p>
+<p>通过ASCII码我们可以得出输入的是数字（0-9）的条件，但因为存在多位数的情况，所以当前数字可能是输入的操作数的十位或百位等，所以不能简单的压入数字栈就完事，我的解决方法是每当遇到数字位都进行一次判断，检查表达式字符串中它的前一位是否为数字，若是，则说明这是个多位数，则将前一位（已入栈）出栈与10的n次幂做乘积后与当前位求和再入栈；对于例如12.34这类浮点数，则在判断当前位不是运算符后首先检查是否为小数点，若是则说明直到下一个运算符都是该浮点数的小数位，则与求多位整数（例12.34的整数位）值类似，与10的负n次幂做乘积累加求和知道遇到下一个运算符时入栈。</p>
+<p><img src="/images/%E8%A1%A8%E8%BE%BE%E5%BC%8F%E6%B1%82%E5%80%BC%E5%AD%90%E5%9B%BE2.png" alt="表达式求值子图2">)<img src="data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==" alt="点击并拖拽以移动"></p>
+<p>上图是我做的流程图（第一次做，略丑，希望能帮助理解即可）</p>
+<h3 id="2-运算符"><a href="#2-运算符" class="headerlink" title="2.运算符"></a>2.运算符</h3><p>运算符的处理相对于操作数就简单许多了，唯一的小问题就是运算符优先级的判断，我第一次写的时候写了层层嵌套的if和switch语句，做了简化修改后可以这样写：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">char</span> <span class="title">Precede</span><span class="params">(<span class="keyword">char</span> c1,<span class="keyword">char</span> c2)</span></span>&#123;</span><br><span class="line">	<span class="comment">//判定运算符的栈顶运算符与读入的运算符之间优先关系</span></span><br><span class="line">    <span class="keyword">char</span> c;</span><br><span class="line">    <span class="keyword">switch</span>(c1)&#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="string">'+'</span>:</span><br><span class="line">        <span class="keyword">case</span> <span class="string">'-'</span>:</span><br><span class="line">	    	<span class="keyword">switch</span>(c2)&#123;</span><br><span class="line">		        <span class="keyword">case</span> <span class="string">'+'</span>:</span><br><span class="line">	            <span class="keyword">case</span> <span class="string">'-'</span>:</span><br><span class="line">		        <span class="keyword">case</span> <span class="string">')'</span>:</span><br><span class="line">	            <span class="keyword">case</span> <span class="string">'#'</span>:</span><br><span class="line">			    	c=<span class="string">'&gt;'</span>;</span><br><span class="line">	               	<span class="keyword">break</span>;</span><br><span class="line">		        <span class="keyword">default</span>:</span><br><span class="line">			    	c=<span class="string">'&lt;'</span>;</span><br><span class="line">	    	&#125;</span><br><span class="line">        	<span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="string">'*'</span>:</span><br><span class="line">        <span class="keyword">case</span> <span class="string">'/'</span>:</span><br><span class="line">            <span class="keyword">if</span>(c2==<span class="string">'('</span>)&#123;</span><br><span class="line">				c=<span class="string">'&lt;'</span>;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span>&#123;</span><br><span class="line">				c=<span class="string">'&gt;'</span>;</span><br><span class="line">			&#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="string">'('</span>:</span><br><span class="line">		    <span class="keyword">if</span>(c2==<span class="string">')'</span>)&#123;</span><br><span class="line">				c=<span class="string">'='</span>;</span><br><span class="line">			&#125;</span><br><span class="line">		    <span class="keyword">else</span>&#123;</span><br><span class="line">				c=<span class="string">'&lt;'</span>;</span><br><span class="line">			&#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="string">')'</span>:</span><br><span class="line">	    	c=<span class="string">'&gt;'</span>;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="string">'#'</span>:</span><br><span class="line">		    <span class="keyword">if</span>(c2==<span class="string">'#'</span>)&#123;</span><br><span class="line">				c=<span class="string">'='</span>;</span><br><span class="line">			&#125;</span><br><span class="line">		    <span class="keyword">else</span>&#123;</span><br><span class="line">				c=<span class="string">'&lt;'</span>;</span><br><span class="line">			&#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> c;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==" alt="点击并拖拽以移动"></p>
+<p>解决了优先级的判断问题后，根据中缀转后缀的步骤，优先级高于栈顶入栈，低的出栈运算直到栈顶元素优先级低于当前位，思路如下：<img src="/images/%E8%A1%A8%E8%BE%BE%E5%BC%8F%E6%B1%82%E5%80%BC%E5%AD%90%E5%9B%BE3.png" alt="表达式求值子图3">)<img src="data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==" alt="点击并拖拽以移动">)<img src="data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==" alt="点击并拖拽以移动"></p>
+<p>如上所述，对表达式字符串处理完毕后，此时运算结果其实就是操作数栈的栈顶元素，且操作数栈仅剩该数字，输出即可。</p>
+<p>下面是完整代码和流程图，如果文字描述不足以让你彻底明白这个问题的解决方法，希望能静下心多看看代码，愿你能保持学习的热情</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//zhao6582@qq.com 12/18</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;math.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MAXSIZE 100</span></span><br><span class="line"><span class="comment">//double栈，用于存放运算数 </span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">	<span class="keyword">double</span> data[MAXSIZE];</span><br><span class="line">	<span class="keyword">int</span> top;</span><br><span class="line">&#125;Stack_n;</span><br><span class="line"><span class="comment">//char栈，用于存放运算符</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">	<span class="keyword">char</span> data[MAXSIZE];</span><br><span class="line">	<span class="keyword">int</span> top;</span><br><span class="line">&#125;Stack_c;</span><br><span class="line"><span class="comment">//栈的初始化</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Init_n</span><span class="params">(Stack_n s)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Init_c</span><span class="params">(Stack_c s)</span></span>;</span><br><span class="line"><span class="comment">////栈的判空函数</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">IsEmpty_n</span><span class="params">(Stack_n s)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">IsEmpty_c</span><span class="params">(Stack_c s)</span></span>;</span><br><span class="line"><span class="comment">//入栈函数 </span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Push_n</span><span class="params">(Stack_n *s,<span class="keyword">double</span> e)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Push_c</span><span class="params">(Stack_c *s,<span class="keyword">char</span> e)</span></span>;</span><br><span class="line"><span class="comment">//出栈函数</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Pop_n</span><span class="params">(Stack_n *s,<span class="keyword">double</span> *e)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Pop_c</span><span class="params">(Stack_c *s,<span class="keyword">char</span> *e)</span></span>;</span><br><span class="line"><span class="comment">//取栈顶函数</span></span><br><span class="line"><span class="function"><span class="keyword">double</span> <span class="title">GetTop_n</span><span class="params">(Stack_n s)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">char</span> <span class="title">GetTop_c</span><span class="params">(Stack_c s)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">char</span> <span class="title">Precede</span><span class="params">(<span class="keyword">char</span> c1,<span class="keyword">char</span> c2)</span></span>;<span class="comment">//判断优先级 </span></span><br><span class="line"><span class="function"><span class="keyword">double</span> <span class="title">Operate</span><span class="params">(<span class="keyword">double</span> a,<span class="keyword">char</span> theta,<span class="keyword">double</span> b)</span></span>;<span class="comment">//二元运算 </span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">In</span><span class="params">(<span class="keyword">char</span> c,<span class="keyword">char</span> *OP)</span></span>;<span class="comment">//是否为 + - * / ( ) </span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">check</span><span class="params">(<span class="keyword">char</span> *s)</span></span>;<span class="comment">//用于检查输入的多项式格式是否正确</span></span><br><span class="line"><span class="function"><span class="keyword">double</span> <span class="title">Poland</span><span class="params">(<span class="keyword">char</span> * s)</span></span>;<span class="comment">//主要功能实现函数</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">char</span> OP[<span class="number">7</span>]=&#123;<span class="string">'+'</span>,<span class="string">'-'</span>,<span class="string">'*'</span>,<span class="string">'/'</span>,<span class="string">'('</span>,<span class="string">')'</span>,<span class="string">'#'</span>&#125;; <span class="comment">//运算符数组(因多个函数使用故声明为公有的)</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">char</span> s[<span class="number">100</span>];</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"请输入表达式：\n"</span>);</span><br><span class="line">	gets(s);</span><br><span class="line">	<span class="keyword">double</span> r = Poland(s);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"%1.2lf\n"</span>,r);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;	</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Init_n</span><span class="params">(Stack_n *s)</span></span>&#123;</span><br><span class="line">	s-&gt;top = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Init_c</span><span class="params">(Stack_c *s)</span></span>&#123;</span><br><span class="line">	s-&gt;top = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//栈的判空函数</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">IsEmpty_n</span><span class="params">(Stack_n s)</span></span>&#123;</span><br><span class="line">	<span class="keyword">if</span>(s.top == <span class="number">0</span>)&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">IsEmpty_c</span><span class="params">(Stack_c s)</span></span>&#123;</span><br><span class="line">	<span class="keyword">if</span>(s.top == <span class="number">0</span>)&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;	</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//入栈函数 </span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Push_n</span><span class="params">(Stack_n *s,<span class="keyword">double</span> e)</span></span>&#123;</span><br><span class="line">	s-&gt;top++;</span><br><span class="line">	s-&gt;data[s-&gt;top] = e;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Push_c</span><span class="params">(Stack_c *s,<span class="keyword">char</span> e)</span></span>&#123;</span><br><span class="line">	s-&gt;top++;</span><br><span class="line">	s-&gt;data[s-&gt;top] = e;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//出栈函数</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Pop_n</span><span class="params">(Stack_n *s,<span class="keyword">double</span> *e)</span></span>&#123;</span><br><span class="line">	*e = s-&gt;data[s-&gt;top];</span><br><span class="line">	s-&gt;top--;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Pop_c</span><span class="params">(Stack_c *s,<span class="keyword">char</span> *e)</span></span>&#123;</span><br><span class="line">	*e = s-&gt;data[s-&gt;top];</span><br><span class="line">	s-&gt;top--;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//取栈顶函数</span></span><br><span class="line"><span class="function"><span class="keyword">double</span> <span class="title">GetTop_n</span><span class="params">(Stack_n s)</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> s.data[s.top];</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">char</span> <span class="title">GetTop_c</span><span class="params">(Stack_c s)</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> s.data[s.top];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">char</span> <span class="title">Precede</span><span class="params">(<span class="keyword">char</span> c1,<span class="keyword">char</span> c2)</span></span>&#123;</span><br><span class="line">	<span class="comment">//判定运算符的栈顶运算符与读入的运算符之间优先关系</span></span><br><span class="line">    <span class="keyword">char</span> c;</span><br><span class="line">    <span class="keyword">switch</span>(c1)&#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="string">'+'</span>:</span><br><span class="line">        <span class="keyword">case</span> <span class="string">'-'</span>:</span><br><span class="line">	    	<span class="keyword">switch</span>(c2)&#123;</span><br><span class="line">		        <span class="keyword">case</span> <span class="string">'+'</span>:</span><br><span class="line">	            <span class="keyword">case</span> <span class="string">'-'</span>:</span><br><span class="line">		        <span class="keyword">case</span> <span class="string">')'</span>:</span><br><span class="line">	            <span class="keyword">case</span> <span class="string">'#'</span>:</span><br><span class="line">			    	c=<span class="string">'&gt;'</span>;</span><br><span class="line">	               	<span class="keyword">break</span>;</span><br><span class="line">		        <span class="keyword">default</span>:</span><br><span class="line">			    	c=<span class="string">'&lt;'</span>;</span><br><span class="line">	    	&#125;</span><br><span class="line">        	<span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="string">'*'</span>:</span><br><span class="line">        <span class="keyword">case</span> <span class="string">'/'</span>:</span><br><span class="line">            <span class="keyword">if</span>(c2==<span class="string">'('</span>)&#123;</span><br><span class="line">				c=<span class="string">'&lt;'</span>;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span>&#123;</span><br><span class="line">				c=<span class="string">'&gt;'</span>;</span><br><span class="line">			&#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="string">'('</span>:</span><br><span class="line">		    <span class="keyword">if</span>(c2==<span class="string">')'</span>)&#123;</span><br><span class="line">				c=<span class="string">'='</span>;</span><br><span class="line">			&#125;</span><br><span class="line">		    <span class="keyword">else</span>&#123;</span><br><span class="line">				c=<span class="string">'&lt;'</span>;</span><br><span class="line">			&#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="string">')'</span>:</span><br><span class="line">	    	c=<span class="string">'&gt;'</span>;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="string">'#'</span>:</span><br><span class="line">		    <span class="keyword">if</span>(c2==<span class="string">'#'</span>)&#123;</span><br><span class="line">				c=<span class="string">'='</span>;</span><br><span class="line">			&#125;</span><br><span class="line">		    <span class="keyword">else</span>&#123;</span><br><span class="line">				c=<span class="string">'&lt;'</span>;</span><br><span class="line">			&#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> c;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">double</span> <span class="title">Operate</span><span class="params">(<span class="keyword">double</span> a,<span class="keyword">char</span> theta,<span class="keyword">double</span> b)</span></span>&#123;</span><br><span class="line">	<span class="comment">//进行二元运算 a theta b</span></span><br><span class="line">	<span class="keyword">double</span> sum;</span><br><span class="line">    <span class="keyword">switch</span>(theta)</span><br><span class="line">    &#123;</span><br><span class="line">       <span class="keyword">case</span> <span class="string">'+'</span>:</span><br><span class="line">	   sum=a+b;</span><br><span class="line">	   <span class="keyword">break</span>;</span><br><span class="line">       <span class="keyword">case</span> <span class="string">'-'</span>:</span><br><span class="line">	   sum=a-b;</span><br><span class="line">	   <span class="keyword">break</span>;</span><br><span class="line">       <span class="keyword">case</span> <span class="string">'*'</span>:</span><br><span class="line">           sum=a*b;</span><br><span class="line">           <span class="keyword">break</span>;</span><br><span class="line">       <span class="keyword">case</span> <span class="string">'/'</span>:</span><br><span class="line">           sum=a/b;</span><br><span class="line">	   <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> sum;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">In</span><span class="params">(<span class="keyword">char</span> c,<span class="keyword">char</span> *OP)</span></span>&#123;</span><br><span class="line">    <span class="comment">//判断是不是运算符</span></span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;<span class="number">7</span>;i++)</span><br><span class="line">       <span class="keyword">if</span>(c==OP[i])   <span class="comment">//是运算符</span></span><br><span class="line">          <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//判断思路：当前字符是运算符且前一位或后一位也是运算符且这3位都不为‘（’和‘）’时说明连续输入了两个运算符</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">check</span><span class="params">(<span class="keyword">char</span> *s)</span></span>&#123;</span><br><span class="line">	<span class="keyword">char</span> *t = s;</span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>;i &lt; <span class="built_in">strlen</span>(s);i++)&#123;</span><br><span class="line">		<span class="keyword">if</span>(i &gt; <span class="number">0</span> &amp;&amp; i &lt; <span class="built_in">strlen</span>(s) - <span class="number">1</span> &amp;&amp; In(s[i],OP) &amp;&amp; (In(s[i - <span class="number">1</span>],OP) || In(s[i + <span class="number">1</span>],OP))</span><br><span class="line">			&amp;&amp;(s[i] != <span class="string">'('</span> &amp;&amp; s[i] != <span class="string">')'</span>) &amp;&amp; (s[i - <span class="number">1</span>] != <span class="string">'('</span> &amp;&amp; s[i - <span class="number">1</span>] != <span class="string">')'</span>)</span><br><span class="line">			&amp;&amp;(s[i + <span class="number">1</span>] != <span class="string">'('</span> &amp;&amp; s[i + <span class="number">1</span>] != <span class="string">')'</span>))&#123;</span><br><span class="line">			<span class="built_in">printf</span>(<span class="string">"输入格式有误！！请检查是否存在连续输入了运算符等错误！！\n"</span>);</span><br><span class="line">			getchar();</span><br><span class="line">			<span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">double</span> <span class="title">Poland</span><span class="params">(<span class="keyword">char</span> * s)</span></span>&#123;</span><br><span class="line">	<span class="comment">//对多项式格式进行检查</span></span><br><span class="line">	check(s);</span><br><span class="line">    <span class="comment">//进行多项式的求值以及后缀表达式的输出</span></span><br><span class="line">    <span class="keyword">int</span> i=<span class="number">0</span>,len,flag=<span class="number">0</span>;</span><br><span class="line">    <span class="keyword">double</span> a,b,sum;</span><br><span class="line">    <span class="keyword">char</span> c1=s[<span class="number">0</span>],e;</span><br><span class="line">    </span><br><span class="line">    Stack_c OPTR; 	<span class="comment">//运算符栈</span></span><br><span class="line">    Stack_n OPND; 	<span class="comment">//运算数栈</span></span><br><span class="line">    Init_c(&amp;OPTR);  <span class="comment">//初始化栈</span></span><br><span class="line">    Init_n(&amp;OPND);</span><br><span class="line">    </span><br><span class="line">    len=<span class="built_in">strlen</span>(s);</span><br><span class="line">    s[len]=<span class="string">'#'</span>;</span><br><span class="line">    s[len+<span class="number">1</span>]=<span class="string">'\0'</span>;</span><br><span class="line">    Push_c(&amp;OPTR,<span class="string">'#'</span>);<span class="comment">//补‘#’作为结束标志</span></span><br><span class="line">    <span class="keyword">while</span>(s[i]!=<span class="string">'#'</span>||GetTop_c(OPTR)!=<span class="string">'#'</span>)&#123; <span class="comment">//遍历每一个字符 为‘#’结束循环</span></span><br><span class="line">		<span class="keyword">if</span>(s[i] == <span class="string">' '</span>)&#123;</span><br><span class="line">			i++;</span><br><span class="line">			<span class="keyword">continue</span>;</span><br><span class="line">		&#125;</span><br><span class="line">        <span class="keyword">if</span>(!In(s[i],OP))&#123; <span class="comment">//如果不是运算符</span></span><br><span class="line">	        <span class="keyword">if</span>(c1==<span class="string">'.'</span>)&#123;<span class="comment">//如果上一个字符是小数点</span></span><br><span class="line">		        flag++;</span><br><span class="line">		    &#125;</span><br><span class="line">		    <span class="keyword">if</span>(flag)&#123;</span><br><span class="line">		    	<span class="keyword">double</span> t;</span><br><span class="line">		    	Pop_n(&amp;OPND,&amp;t);</span><br><span class="line">				Push_n(&amp;OPND,t + (<span class="keyword">double</span>)(s[i] - <span class="string">'0'</span>) / <span class="built_in">pow</span>(<span class="number">10</span>,flag));<span class="comment">//对小数点后的部分 按位数运算并入栈 </span></span><br><span class="line">				flag++;</span><br><span class="line">			&#125;</span><br><span class="line">	        <span class="keyword">if</span>(s[i]!=<span class="string">'.'</span>&amp;&amp;!flag)&#123;</span><br><span class="line">	            <span class="keyword">if</span>(!In(c1,OP)&amp;&amp;!IsEmpty_n(OPND))&#123;<span class="comment">//如果上一个字符是数字（说明是多位数） 根据位数运算后入栈</span></span><br><span class="line">	            	<span class="keyword">double</span> t;</span><br><span class="line">	            	Pop_n(&amp;OPND,&amp;t);</span><br><span class="line">	                Push_n(&amp;OPND,t * <span class="number">10</span> + s[i] - <span class="string">'0'</span>);</span><br><span class="line">	            &#125;</span><br><span class="line">	            <span class="keyword">else</span><span class="comment">//否则压入运算数栈</span></span><br><span class="line">	            	Push_n(&amp;OPND,(<span class="keyword">double</span>)(s[i]-<span class="string">'0'</span>));</span><br><span class="line">		    &#125;</span><br><span class="line">	    	c1=s[i++]; <span class="comment">//读取下一个字符</span></span><br><span class="line">	    &#125;</span><br><span class="line">        <span class="keyword">else</span>&#123;<span class="comment">//如果是运算符</span></span><br><span class="line">            flag=<span class="number">0</span>;</span><br><span class="line">            <span class="keyword">switch</span>(Precede(GetTop_c(OPTR),s[i]))&#123;</span><br><span class="line">                 <span class="keyword">case</span> <span class="string">'&gt;'</span>:  <span class="comment">//当前运算符优先级低</span></span><br><span class="line">		             Pop_c(&amp;OPTR,&amp;e); <span class="comment">//运算符出栈,和操作数的头两个数运算 </span></span><br><span class="line">		             Pop_n(&amp;OPND,&amp;b);</span><br><span class="line">                     Pop_n(&amp;OPND,&amp;a);</span><br><span class="line">		             Push_n(&amp;OPND,Operate(a,e,b)); <span class="comment">//计算结果入栈</span></span><br><span class="line">                     <span class="keyword">break</span>;</span><br><span class="line">                 <span class="keyword">case</span> <span class="string">'='</span>: <span class="comment">//优先级相等</span></span><br><span class="line">		             Pop_c(&amp;OPTR,&amp;e); <span class="comment">//弹出运算符栈顶元素</span></span><br><span class="line">		             c1 = s[i++];</span><br><span class="line">                     <span class="keyword">break</span>;</span><br><span class="line">                 <span class="keyword">case</span> <span class="string">'&lt;'</span>:</span><br><span class="line">		          	Push_c(&amp;OPTR,s[i]); <span class="comment">//当前运算符优先级高 入栈</span></span><br><span class="line">		            c1 = s[i++];</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">	    	&#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    sum=GetTop_n(OPND);</span><br><span class="line">    <span class="keyword">return</span> sum; <span class="comment">//返回运算数栈顶元素，即运算结果 </span></span><br><span class="line">&#125;<span class="comment">//@@ end @@</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==" alt="点击并拖拽以移动"></p>
+<p><img src="/images/%E8%A1%A8%E8%BE%BE%E5%BC%8F%E6%B1%82%E5%80%BC.png" alt="表达式求值">)<img src="data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==" alt="点击并拖拽以移动"></p>
+<p><strong><em>代码也是看了很多博客帖子后总结出来的，建议好好利用搜索引擎。\</em></strong></p>
+<p><strong><em>栈的实现、逆波兰转换和计算等基本概念很多书都有，我看的是学校教材，清华大学出版社出版、***</em></strong>严蔚敏老师的*<strong><em>**《数据结构（C语言版）》和程杰老师的《大话数据结构》。\</em></strong></p>
+
+      
+      <!-- 打赏 -->
+      
+        <div id="reward-btn">
+          打赏
+        </div>
+        
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://qingshui3000.github.io/2019/12/20/%E8%A1%A8%E8%BE%BE%E5%BC%8F%E6%B1%82%E5%80%BC/" data-id="ck4e5kqak00004gds1bc47gm4"
+        class="article-share-link">分享</a>
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84-%E6%A0%88/" rel="tag">数据结构 - 栈</a></li></ul>
+
+    </footer>
+
+  </div>
+
+  
+  
+  <nav class="article-nav">
+    
+    
+      <a href="/2019/12/17/%E6%A0%88%E5%92%8C%E9%98%9F%E5%88%97%E7%9A%84%E8%BD%AC%E6%8D%A2/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">栈和队列的转换</div>
+      </a>
+    
+  </nav>
+
+
+  
+
+  
+  
+<!-- valine评论 -->
+<div id="vcomments-box">
+    <div id="vcomments">
+    </div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        notify: false,
+        verify: false,
+        app_id: 'chaSYi8FMdJBwzIBpxeNjqWC-gzGzoHsz',
+        app_key: 'PqqkLYgPkHvH1BmyQqySWnSK',
+        path: window.location.pathname,
+        avatar: 'mp',
+        placeholder: '给我的文章加点评论吧~',
+        recordIP: true
+    });
+    const infoEle = document.querySelector('#vcomments .info');
+    if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+        infoEle.childNodes.forEach(function (item) {
+            item.parentNode.removeChild(item);
+        });
+    }
+</script>
+<style>
+    #vcomments-box {
+        padding: 5px 30px;
+    }
+
+    @media screen and (max-width: 800px) {
+        #vcomments-box {
+            padding: 5px 0px;
+        }
+    }
+
+    #vcomments-box #vcomments {
+        background-color: #fff;
+    }
+
+    .v .vlist .vcard .vh {
+        padding-right: 20px;
+    }
+
+    .v .vlist .vcard {
+        padding-left: 10px;
+    }
+</style>
+
+  
+
+  
+  
+  
+
+</article>
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul class="list-inline">
+      <li>
+        &copy;
+        2019
+        qssq
+      </li>
+      <li>
+        
+        
+        
+        <a href="https://hexo.io" target="_blank">Hexo</a> Theme <a href="https://github.com/Shen-Yu/hexo-theme-ayer" target="_blank">Ayer</a> by shenyu
+        
+      </li>
+    </ul>
+    <ul class="list-inline">
+      <li>
+        
+        
+        <ul class="list-inline">
+  <li>PV:<span id="busuanzi_value_page_pv"></span></li>
+  <li>UV:<span id="busuanzi_value_site_uv"></span></li>
+</ul>
+        
+      </li>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+    <div class="to_top">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+      </div>
+    </main>
+    
+    <aside class="sidebar">
+      
+        <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/th.jpg" alt="qssq的博客"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">目录</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="Search">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+      </aside>
+      <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+      
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/jquery.justifiedGallery.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+  
+<script src="/js/tocbot.min.js"></script>
+
+  <script>
+    // Tocbot_v4.7.0  http://tscanlin.github.io/tocbot/
+    tocbot.init({
+      tocSelector: '.tocbot',
+      contentSelector: '.article-entry',
+      headingSelector: 'h1, h2, h3, h4, h5, h6',
+      hasInnerContainers: true,
+      scrollSmooth: true,
+      positionFixedSelector: '.tocbot',
+      positionFixedClass: 'is-position-fixed',
+      fixedSidebarOffset: 'auto',
+    });
+  </script>
+
+
+<script>
+  var ayerConfig = {
+    mathjax: true
+  }
+</script>
+
+
+<script src="/js/ayer.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+
+
+  <script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+      tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+  });
+
+  MathJax.Hub.Queue(function() {
+      var all = MathJax.Hub.getAllJax(), i;
+      for(i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+      }
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.6/unpacked/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+
+  </div>
+</body>
+
+</html>
