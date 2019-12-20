@@ -101,3 +101,19 @@ deploy:
   type: git
   repo: https://github.com/qingshui3000/qblog.github.io.git
   branch: master
+
+# Hexo-generator-search
+search:
+  path: search.xml
+  field: post
+  format: html
+
+feed:
+    type: atom
+    path: atom.xml
+    limit: 20
+    hub:
+    content:
+    content_limit: 140
+    content_limit_delim: ' '
+    order_by: -date
