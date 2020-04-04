@@ -9,6 +9,8 @@ categories: 在复习MySQL中的一些总结
 
 ## MySQL基础
 
+<!--more-->
+
 ### 1.MySQL数据类型有哪些？
 
 1. **整数类型：**包括TINYINT、SMALLINT、MEDIUMINT、INT、BIGINT，分别表示1字节、2字节、3字节、4字节和8字节的整数。任何整数类型都可以加上UNSIGNED属性，表示数据是无符号的，即非负整数。
