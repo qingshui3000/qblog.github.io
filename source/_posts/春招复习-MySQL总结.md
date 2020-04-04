@@ -2,10 +2,9 @@
 title: 春招复习-MySQL总结
 permalink: 春招复习-MySQL总结
 date: 2020-04-04 19:36:11
-tags:'MySQL'
-categories:
+tags: 'MySQL'
+categories: 在复习MySQL中的一些总结
 ---
-
 # MySQL
 
 ## MySQL基础
