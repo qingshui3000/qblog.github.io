@@ -8,6 +8,8 @@ categories:
 
 # 重建二叉树
 
+<!--more-->
+
 [牛客网-重建二叉树]("https://www.nowcoder.com/practice/8a19cbe657394eeaac2f6ea9b0f6fcf6?tpId=13&tqId=11157&tPage=1&rp=1&ru=/ta/coding-interviews&qru=/ta/coding-interviews/question-ranking")
 
 ### 题目描述
